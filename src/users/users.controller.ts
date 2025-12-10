@@ -1,4 +1,14 @@
-import { Controller, Get, Param, Post, Body, Delete, Put } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Param,
+  Post,
+  Body,
+  Delete,
+  Put,
+  NotFoundException,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 
 interface User {
   id: string;
@@ -23,11 +33,9 @@ export class UsersController {
   FindUsers(@Param('id') id: string) {
     const user = this.users.find((user) => user.id === id);
     if (!user) {
-      return {
-        message: 'User not found',
-      };
-  };
-     return user;
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    return user;
   }
 
   @Post()
@@ -45,9 +53,7 @@ export class UsersController {
   deleteUser(@Param('id') id: string) {
     const userIndex = this.users.findIndex((user) => user.id === id);
     if (userIndex === -1) {
-      return {
-        message: 'User not found',
-      };
+      throw new NotFoundException(`User with id ${id} not found`);
     }
     const deletedUser = this.users.splice(userIndex, 1)[0];
     return { message: 'User deleted successfully', user: deletedUser };
@@ -60,15 +66,31 @@ export class UsersController {
   ) {
     const userIndex = this.users.findIndex((user) => user.id === id);
     if (userIndex === -1) {
-      return {
-        message: 'User not found',
-      };
+      throw new NotFoundException(`User with id ${id} not found`);
     }
     const user = this.users[userIndex];
+    if (updatedUserData.email) {
+      const emailExists = this.users.some(
+        (u) => u.email === updatedUserData.email && u.id !== id,
+      );
+      if (emailExists) {
+        return {
+          message: 'Email already in use',
+        };
+      }
+    }
+    if (!this.isEmailValid(updatedUserData.email || user.email)) {
+      throw new UnprocessableEntityException(`Invalid email format`);
+    }
     this.users[userIndex] = {
       ...user,
       ...updatedUserData,
     };
     return this.users[userIndex];
+  }
+
+  isEmailValid(email: string): boolean {
+    const emailRegex = /^(([^<>()[\]\\.,;:\s@”]+(\.[^<>()[\]\\.,;:\s@”]+)*)|(“.+”))@((\[[0–9]{1,3}\.[0–9]{1,3}\.[0–9]{1,3}\.[0–9]{1,3}])|(([a-zA-Z\-0–9]+\.)+[a-zA-Z]{2,}))$/;
+    return emailRegex.test(email);
   }
 }
