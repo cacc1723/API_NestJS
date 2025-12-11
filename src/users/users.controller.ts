@@ -9,6 +9,7 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
+import { CreateUserDto, UpdateUserDto } from './user.dto';
 
 interface User {
   id: string;
@@ -39,11 +40,10 @@ export class UsersController {
   }
 
   @Post()
-  createUser(@Body() newUserData: { name: string; email: string }) {
-    const newUser: User = {
+  createUser(@Body() newUserData: CreateUserDto) {
+    const newUser = {
+      ...newUserData,
       id: (this.users.length + 1).toString(),
-      name: newUserData.name,
-      email: newUserData.email,
     };
     this.users.push(newUser);
     return newUser;
@@ -60,10 +60,7 @@ export class UsersController {
   }
 
   @Put(':id')
-  updateUser(
-    @Param('id') id: string,
-    @Body() updatedUserData: { name?: string; email?: string },
-  ) {
+  updateUser(@Param('id') id: string, @Body() updatedUserData: UpdateUserDto) {
     const userIndex = this.users.findIndex((user) => user.id === id);
     if (userIndex === -1) {
       throw new NotFoundException(`User with id ${id} not found`);
@@ -79,9 +76,7 @@ export class UsersController {
         };
       }
     }
-    if (!this.isEmailValid(updatedUserData.email || user.email)) {
-      throw new UnprocessableEntityException(`Invalid email format`);
-    }
+
     this.users[userIndex] = {
       ...user,
       ...updatedUserData,
@@ -89,8 +84,5 @@ export class UsersController {
     return this.users[userIndex];
   }
 
-  isEmailValid(email: string): boolean {
-    const emailRegex = /^(([^<>()[\]\\.,;:\s@”]+(\.[^<>()[\]\\.,;:\s@”]+)*)|(“.+”))@((\[[0–9]{1,3}\.[0–9]{1,3}\.[0–9]{1,3}\.[0–9]{1,3}])|(([a-zA-Z\-0–9]+\.)+[a-zA-Z]{2,}))$/;
-    return emailRegex.test(email);
-  }
+
 }
