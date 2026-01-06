@@ -6,12 +6,10 @@ import {
   Body,
   Delete,
   Put,
-  NotFoundException,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
 import { UsersService } from './users.service';
-
-
 
 @Controller('users')
 export class UsersController {
@@ -23,8 +21,8 @@ export class UsersController {
   }
 
   @Get(':id')
-  FindUsers(@Param('id') id: string) {
-    return this.usersService.findById(id);
+  FindUsers(@Param('id', ParseIntPipe) id: number) {
+    return this.usersService.getUserById(id);
   }
 
   @Post()
@@ -33,12 +31,12 @@ export class UsersController {
   }
 
   @Delete(':id')
-  deleteUser(@Param('id') id: string) {
+  deleteUser(@Param('id', ParseIntPipe) id: number) {
     return this.usersService.delete(id);
   }
 
   @Put(':id')
-  updateUser(@Param('id') id: string, @Body() updatedUserData: UpdateUserDto) {
+  updateUser(@Param('id', ParseIntPipe) id: number, @Body() updatedUserData: UpdateUserDto) {
     return this.usersService.update(id, updatedUserData);
   }
 }

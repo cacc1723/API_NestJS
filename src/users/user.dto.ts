@@ -11,7 +11,7 @@ import { Transform } from 'class-transformer';
 export class UserDto {
   @ApiProperty({ description: 'User ID' })
   @IsNotEmpty({ message: 'El ID es obligatorio' })
-  id: string;
+  id: number;
 
   @ApiProperty({ description: 'Full name of the user' })
   @IsNotEmpty({ message: 'El nombre es obligatorio' })
@@ -35,5 +35,5 @@ export class UpdateUserDto extends PartialType(
 ) {
   @ApiProperty({ description: 'User ID to update' })
   @IsNotEmpty({ message: 'El ID es obligatorio para actualizar' })
-  id: string;
+  id: number;
 }

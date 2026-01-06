@@ -1,64 +1,48 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { User } from './users.model';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { User } from './entities/user.entity';
 
 @Injectable()
 export class UsersService {
+  constructor(
+    @InjectRepository(User)
+     private readonly usersRepository: Repository<User>,
+  ) {}
 
-private users: User[] = [
-  { id: '1', name: 'Alice', email: 'alice@example.com' },
-  { id: '2', name: 'Bob', email: 'bob@example.com' },
-  { id: '3', name: 'Charlie', email: 'charlie@example.com' },
-];
-
-  findAll() {
-    return this.users;
+  async findAll() {
+    const users = await this.usersRepository.find();
+    return users;
   }
 
-  findById(id: string) {
-    const userIndex = this.findone(id);
-    return this.users[userIndex];
+  async getUserById(id: number) {
+    const user = await this.findone(id);
+    return user;
   }
 
-  create(userData: CreateUserDto) {
-    const newUser: User = {
-      id: (this.users.length + 1).toString(),
-      ...userData,
-    };
-    this.users.push(newUser);
+  async create(userData: CreateUserDto) {
+    const newUser = await this.usersRepository.save(userData);
     return newUser;
   }
 
-  delete(id: string) {
-    const userIndex = this.findone(id);
-    const deletedUser = this.users.splice(userIndex, 1)[0];
-    return deletedUser;
+  async delete(id: number) {
+    const user = await this.findone(id);
+    await this.usersRepository.remove(user);
+    return { message: `User with id ${id} has been deleted` };
   }
 
-  update(id: string, updatedData: UpdateUserDto) {
-    const userIndex = this.findone(id);
-    const user = this.users[userIndex];
-
-    if (updatedData.email) {
-      const emailExists = this.users.some(
-        (u) => u.email === updatedData.email && u.id !== id,
-      );
-      if (emailExists) {
-        return {
-          message: 'Email already in use',
-        };
-      }
-    }
-    const updatedUser = { ...user, ...updatedData };
-    this.users[userIndex] = updatedUser;
-    return updatedUser;
+  async update(id: number, updatedData: UpdateUserDto) {
+    const user = await this.findone(id);
+    const updatedUser = this.usersRepository.merge(user, updatedData);
+    return this.usersRepository.save(updatedUser);
   }
 
-  private findone(id: string) {
-    const userIndex = this.users.findIndex((user) => user.id === id);
-    if (userIndex === -1) {
+  private async findone(id: number) {
+    const user = await this.usersRepository.findOneBy({ id });
+    if (!user) {
       throw new NotFoundException(`User with id ${id} not found`);
     }
-    return userIndex;
+    return user;
   }
 }
