@@ -5,7 +5,7 @@ import {
   PartialType,
 } from '@nestjs/swagger';
 
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class UserDto {
@@ -25,6 +25,12 @@ export class UserDto {
     value === '' ? undefined : (value as string | undefined),
   )
   email: string;
+
+  @ApiPropertyOptional({ description: 'Password of the user' })
+  @IsOptional()
+  @IsString({ message: 'La contraseña debe ser una cadena de texto' })
+  @MinLength(8, { message: 'La contraseña debe tener al menos 6 caracteres' })
+  password: string;
 }
 // DTO para crear: sin ID
 export class CreateUserDto extends OmitType(UserDto, ['id'] as const) {}
